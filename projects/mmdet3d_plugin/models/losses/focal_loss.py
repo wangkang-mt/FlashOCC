@@ -120,7 +120,7 @@ def sigmoid_focal_loss(pred,
                        alpha=0.25,
                        reduction='mean',
                        avg_factor=None):
-    r"""A wrapper of cuda version `Focal Loss
+    r"""A wrapper of musa version `Focal Loss
     <https://arxiv.org/abs/1708.02002>`_.
     Args:
         pred (torch.Tensor): The prediction with shape (N, C), C is the number
@@ -201,7 +201,7 @@ class CustomFocalLoss(nn.Module):
         c = torch.stack([xy, yx], 2)
         c = torch.norm(c, 2, -1)
         c_max = c.max()
-        self.c = (c / c_max + 1).cuda()
+        self.c = (c / c_max + 1).musa()
 
     def forward(self,
                 pred,
@@ -243,7 +243,7 @@ class CustomFocalLoss(nn.Module):
             if self.activated:
                 calculate_loss_func = py_focal_loss_with_prob
             else:
-                if torch.cuda.is_available() and pred.is_cuda:
+                if torch.musa.is_available() and pred.is_musa:
                     calculate_loss_func = sigmoid_focal_loss
                 else:
                     num_classes = pred.size(1)

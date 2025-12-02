@@ -8,9 +8,21 @@ from torch.utils.cpp_extension import load
 from tqdm import tqdm
 from prettytable import PrettyTable
 from .ray_pq import Metric_RayPQ
+import dvr
 
 
-dvr = load("dvr", sources=["lib/dvr/dvr.cpp", "lib/dvr/dvr.cu"], verbose=True, extra_cuda_cflags=['-allow-unsupported-compiler'])
+#dvr = load("dvr",
+#    sources=["lib/dvr/dvr.cpp", "lib/dvr/dvr_kernel.mu"],
+#    with_cuda=False,   
+#    verbose=True,
+#    extra_cuda_cflags=[
+#        '-allow-unsupported-compiler',
+#        '-DMUSA_ENABLED',
+#       '-I/usr/local/musa/include'
+#    ],
+#    extra_ldflags=['-L/usr/local/musa/lib', '-lmusart', '-lmusa'])
+
+print("编译成功！！！！！！！！！！！！！！！！！")     
 _pc_range = [-40, -40, -1.0, 40, 40, 5.4]
 _voxel_size = 0.4
 
@@ -108,10 +120,10 @@ def process_one_sample(sem_pred, lidar_rays, output_origin, instance_pred=None):
 
         with torch.no_grad():
             pred_dist, _, coord_index = dvr.render_forward(
-                occ_pred.cuda(),
-                output_origin_render.cuda(),
-                output_points_render.cuda(),
-                output_tindex_render.cuda(),
+                occ_pred.musa(),
+                output_origin_render.musa(),
+                output_points_render.musa(),
+                output_tindex_render.musa(),
                 [1, 16, 200, 200],
                 "test"
             )
@@ -179,7 +191,7 @@ def calc_metrics(pcd_pred_list, pcd_gt_list):
 
 
 def main_raypq(sem_pred_list, sem_gt_list, inst_pred_list, inst_gt_list, lidar_origin_list):
-    torch.cuda.empty_cache()
+    torch.musa.empty_cache()
 
     eval_metrics_pq = Metric_RayPQ(
         num_classes=len(occ_class_names),
@@ -221,13 +233,13 @@ def main_raypq(sem_pred_list, sem_gt_list, inst_pred_list, inst_gt_list, lidar_o
 
         eval_metrics_pq.add_batch(sem_pred, sem_gt, instances_pred, instances_gt, l1_error)
 
-    torch.cuda.empty_cache()
+    torch.musa.empty_cache()
 
     return eval_metrics_pq.count_pq()
 
 
 def main(sem_pred_list, sem_gt_list, lidar_origin_list):
-    torch.cuda.empty_cache()
+    torch.musa.empty_cache()
 
     # generate lidar rays
     lidar_rays = generate_lidar_rays()
@@ -272,7 +284,7 @@ def main(sem_pred_list, sem_gt_list, lidar_origin_list):
 
     print(table)
 
-    torch.cuda.empty_cache()
+    torch.musa.empty_cache()
 
     return {
         'RayIoU': rayiou,

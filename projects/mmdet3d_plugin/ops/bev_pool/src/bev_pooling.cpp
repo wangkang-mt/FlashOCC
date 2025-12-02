@@ -1,5 +1,5 @@
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 
 #include "bev_sum_pool.h"
 #include "bev_max_pool.h"

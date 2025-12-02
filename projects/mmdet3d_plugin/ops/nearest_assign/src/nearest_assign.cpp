@@ -1,9 +1,9 @@
 // Copyright (c) Phigent Robotics. All rights reserved.
 // Reference https://arxiv.org/abs/2211.17111
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 
-// CUDA function declarations
+// MUSA function declarations
 void nearest_assign(
                     const int* l2s_key,
                     int l2s_size,
@@ -26,7 +26,7 @@ void nearest_assign_forward(
 ) {
   int l2s_size = _l2s_key.size(0);
   int inst_size = _inst_xyz.size(0);
-  const at::cuda::OptionalCUDAGuard device_guard(device_of(_occ_pred));
+  const at::musa::OptionalMUSAGuard device_guard(device_of(_occ_pred));
   const int* occ_pred = _occ_pred.data_ptr<int>();
   const int* inst_xyz = _inst_xyz.data_ptr<int>();
   const int* inst_cls = _inst_cls.data_ptr<int>();

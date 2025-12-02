@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmdet.models.backbones.resnet import BasicBlock
 from mmcv.cnn import build_conv_layer
-from torch.cuda.amp.autocast_mode import autocast
+from torch_musa.core.amp.autocast_mode import autocast
 from torch.utils.checkpoint import checkpoint
 
 

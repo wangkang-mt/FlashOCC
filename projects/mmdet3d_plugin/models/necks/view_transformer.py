@@ -5,7 +5,7 @@ from mmcv.runner import BaseModule, force_fp32
 from mmdet3d.models.builder import NECKS
 from ...ops import bev_pool_v2
 from ..model_utils import DepthNet
-from torch.cuda.amp.autocast_mode import autocast
+from torch_musa.core.amp.autocast_mode import autocast
 import torch.nn.functional as F
 
 

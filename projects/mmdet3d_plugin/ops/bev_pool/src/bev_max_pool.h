@@ -2,7 +2,7 @@
 #define _BEV_MAX_POOL_H
 
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 
 at::Tensor bev_max_pool_forward(
   const at::Tensor _geom_feats,

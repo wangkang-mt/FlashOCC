@@ -76,7 +76,7 @@ class TRTWrapper(torch.nn.Module):
             with trt.Logger() as logger, trt.Runtime(logger) as runtime:
                 with open(self.engine, mode='rb') as f:
                     engine_bytes = f.read()
-                self.engine = runtime.deserialize_cuda_engine(engine_bytes)
+                self.engine = runtime.deserialize_musa_engine(engine_bytes)
         self.context = self.engine.create_execution_context()
         names = [_ for _ in self.engine]
         input_names = list(filter(self.engine.binding_is_input, names))
@@ -101,12 +101,12 @@ class TRTWrapper(torch.nn.Module):
             dtype = torch_dtype_from_trt(self.engine.get_binding_dtype(idx))
             shape = tuple(self.context.get_binding_shape(idx))
 
-            device = torch.device('cuda')
+            device = torch.device('musa')
             output = torch.zeros(size=shape, dtype=dtype, device=device)
             outputs[output_name] = output
             bindings[idx] = output.data_ptr()
         self.context.execute_async_v2(bindings,
-                                      torch.cuda.current_stream().cuda_stream)
+                                      torch.musa.current_stream().musa_stream)
         return outputs
 
 
@@ -190,7 +190,7 @@ def main():
     results = list()
     for i, data in enumerate(data_loader):
         if init_:
-            inputs = [t.cuda() for t in data['img_inputs'][0]]
+            inputs = [t.musa() for t in data['img_inputs'][0]]
             if model.__class__.__name__ in ['FBOCCTRT', 'FBOCC2DTRT']:
                 metas_ = model.get_bev_pool_input(inputs, img_metas=data['img_metas'])
             else:
@@ -214,10 +214,10 @@ def main():
                     interval_lengths=metas_[4].int().contiguous(),
                     mlp_input=mlp_input)
             init_ = False
-        img = data['img_inputs'][0][0].cuda().squeeze(0).contiguous()
+        img = data['img_inputs'][0][0].musa().squeeze(0).contiguous()
         if img.shape[0] > 6:
             img = img[:6]
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         start_time = time.perf_counter()
         trt_output = trt_model.forward(dict(img=img, **metas))
 
@@ -248,7 +248,7 @@ def main():
                 elif (not cfg.model.get('wdet3d', False)) and cfg.model.get('wocc', True):
                     results.append(occ_preds[0])
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         elapsed = time.perf_counter() - start_time
 
         if i >= num_warmup:

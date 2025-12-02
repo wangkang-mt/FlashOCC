@@ -7,6 +7,7 @@ NNODES=${NNODES:-1}
 NODE_RANK=${NODE_RANK:-0}
 PORT=${PORT:-29501}
 MASTER_ADDR=${MASTER_ADDR:-"127.0.0.1"}
+echo $LOCAL_RANK
 
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
 python -m torch.distributed.launch \
@@ -19,4 +20,4 @@ python -m torch.distributed.launch \
     $CONFIG \
     $CHECKPOINT \
     --launcher pytorch \
-    ${@:4}
+    ${@:4} 

@@ -6,10 +6,10 @@
 #include <vector>
 
 /*
- * CUDA forward declarations
+ * MUSA forward declarations
  */
 
-std::vector<torch::Tensor> render_forward_cuda(torch::Tensor sigma,
+std::vector<torch::Tensor> render_forward_musa(torch::Tensor sigma,
                                                torch::Tensor origin,
                                                torch::Tensor points,
                                                torch::Tensor tindex,
@@ -17,10 +17,10 @@ std::vector<torch::Tensor> render_forward_cuda(torch::Tensor sigma,
                                                std::string phase_name);
 
 std::vector<torch::Tensor>
-render_cuda(torch::Tensor sigma, torch::Tensor origin, torch::Tensor points,
+render_musa(torch::Tensor sigma, torch::Tensor origin, torch::Tensor points,
             torch::Tensor tindex, std::string loss_name);
 
-torch::Tensor init_cuda(torch::Tensor points, torch::Tensor tindex,
+torch::Tensor init_musa(torch::Tensor points, torch::Tensor tindex,
                         const std::vector<int> grid);
 
 
@@ -28,12 +28,12 @@ torch::Tensor init_cuda(torch::Tensor points, torch::Tensor tindex,
  * C++ interface
  */
 
-#define CHECK_CUDA(x)                                                          \
-  TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+#define CHECK_MUSA(x)                                                          \
+  TORCH_CHECK(x.device().str() == "musa", #x " must be a MUSA tensor")         
 #define CHECK_CONTIGUOUS(x)                                                    \
   TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_INPUT(x)                                                         \
-  CHECK_CUDA(x);                                                               \
+  CHECK_MUSA(x);                                                               \
   CHECK_CONTIGUOUS(x)
 
 std::vector<torch::Tensor>
@@ -44,7 +44,7 @@ render_forward(torch::Tensor sigma, torch::Tensor origin, torch::Tensor points,
   CHECK_INPUT(origin);
   CHECK_INPUT(points);
   CHECK_INPUT(tindex);
-  return render_forward_cuda(sigma, origin, points, tindex, grid, phase_name);
+  return render_forward_musa(sigma, origin, points, tindex, grid, phase_name);
 }
 
 
@@ -55,14 +55,14 @@ std::vector<torch::Tensor> render(torch::Tensor sigma, torch::Tensor origin,
   CHECK_INPUT(origin);
   CHECK_INPUT(points);
   CHECK_INPUT(tindex);
-  return render_cuda(sigma, origin, points, tindex, loss_name);
+  return render_musa(sigma, origin, points, tindex, loss_name);
 }
 
 torch::Tensor init(torch::Tensor points, torch::Tensor tindex,
                    const std::vector<int> grid) {
   CHECK_INPUT(points);
   CHECK_INPUT(tindex);
-  return init_cuda(points, tindex, grid);
+  return init_musa(points, tindex, grid);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

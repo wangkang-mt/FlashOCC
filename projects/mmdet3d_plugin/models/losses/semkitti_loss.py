@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 # from mmcv.runner import BaseModule, force_fp32
-from torch.cuda.amp import autocast
+from torch_musa.core.amp import autocast
 
 semantic_kitti_class_frequencies = np.array(
     [

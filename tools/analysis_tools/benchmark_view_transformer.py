@@ -77,35 +77,35 @@ def main():
 
         with torch.no_grad():
             img_feat, _ = \
-                model.module.image_encoder(data['img_inputs'][0][0].cuda())
+                model.module.image_encoder(data['img_inputs'][0][0].musa())
             B, N, C, H, W = img_feat.shape
             x = depth_net(img_feat.reshape(B * N, C, H, W))
             depth_digit = x[:, :D, ...]
             tran_feat = x[:, D:D + out_channels, ...]
             depth = depth_digit.softmax(dim=1)
-        input = [img_feat] + [d.cuda() for d in data['img_inputs'][0][1:]]
+        input = [img_feat] + [d.musa() for d in data['img_inputs'][0][1:]]
 
         if i == 0:
             precomputed_memory_allocated = 0.0
             if view_transformer.accelerate:
-                start_mem_allocated = torch.cuda.memory_allocated()
+                start_mem_allocated = torch.musa.memory_allocated()
                 view_transformer.pre_compute(input)
-                end_mem_allocated = torch.cuda.memory_allocated()
+                end_mem_allocated = torch.musa.memory_allocated()
                 precomputed_memory_allocated = \
                     end_mem_allocated - start_mem_allocated
-                ref_max_mem_allocated = torch.cuda.max_memory_allocated()
+                ref_max_mem_allocated = torch.musa.max_memory_allocated()
                 # occupy the memory
                 size = (ref_max_mem_allocated - end_mem_allocated) // 4
                 occupy_tensor = torch.zeros(
-                    size=(size, ), device='cuda', dtype=torch.float32)
+                    size=(size, ), device='musa', dtype=torch.float32)
             print('Memory analysis: \n'
                   'precomputed_memory_allocated : %d B / %.01f MB \n' %
                   (precomputed_memory_allocated,
                    precomputed_memory_allocated / 1024 / 1024))
-            start_mem_allocated = torch.cuda.memory_allocated()
+            start_mem_allocated = torch.musa.memory_allocated()
             bev_feat = view_transformer.view_transform_core(
                 input, depth, tran_feat)[0]
-            end_max_mem_allocated = torch.cuda.max_memory_allocated()
+            end_max_mem_allocated = torch.musa.max_memory_allocated()
             peak_memory_allocated = \
                 end_max_mem_allocated - start_mem_allocated
             total_memory_requirement = \
@@ -117,11 +117,11 @@ def main():
             if args.mem_only:
                 return
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         start_time = time.perf_counter()
         with torch.no_grad():
             view_transformer.view_transform(input, depth, tran_feat)[0]
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         elapsed = time.perf_counter() - start_time
 
         if i >= num_warmup:

@@ -188,11 +188,11 @@ def main():
     logger_initialized['mmcv'] = logging.Logger(__name__, logging.WARNING)
 
     # you need one GPU
-    assert torch.cuda.is_available()
-    # assert torch.cuda.device_count() == 1
+    assert torch.musa.is_available()
+    # assert torch.musa.device_count() == 1
 
     # logging
-    logging.info('Using GPU: %s' % torch.cuda.get_device_name(0))
+    logging.info('Using GPU: %s' % torch.musa.get_device_name(0))
 
     # random seed
     logging.info('Setting random seed: 0')
@@ -229,13 +229,13 @@ def main():
 
     logging.info('Creating model: %s' % cfgs.model.type)
     model = build_model(cfgs.model)
-    model.cuda()
+    model.musa()
     model = MMDataParallel(model, [0])
     model.eval()
 
     logging.info('Loading checkpoint from %s' % args.weights)
     load_checkpoint(
-        model, args.weights, map_location='cuda', strict=True,
+        model, args.weights, map_location='musa', strict=True,
         logger=logging.Logger(__name__, logging.ERROR)
     )
 

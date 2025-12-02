@@ -1,10 +1,10 @@
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 #include "bev_max_pool.h"
 
 
 /*
-  Function: pillar pooling (forward, cuda)
+  Function: pillar pooling (forward, musa)
   Args:
     geom_feats         : input features, FloatTensor[N, C]
     _geom_coords       : input coordinates, IntTensor[N, 4]  4: (x_id, y_id, z_id, batch_id)
@@ -23,7 +23,7 @@ at::Tensor bev_max_pool_forward(
   int n = _geom_feats.size(0);
   int c = _geom_feats.size(1);
   int n_intervals = _interval_lengths.size(0);
-  const at::cuda::OptionalCUDAGuard device_guard(device_of(_geom_feats));
+  const at::musa::OptionalMUSAGuard device_guard(device_of(_geom_feats));
   const float* geom_feats = _geom_feats.data_ptr<float>();
   const int* geom_coords = _geom_coords.data_ptr<int>();
   const int* interval_lengths = _interval_lengths.data_ptr<int>();
@@ -42,7 +42,7 @@ at::Tensor bev_max_pool_forward(
 
 
 /*
-  Function: pillar pooling (backward, cuda)
+  Function: pillar pooling (backward, musa)
   Args:
     out_grad         : input features, FloatTensor[B, D, H, W, C]
     geom_coords       : input coordinates, IntTensor[N, 4]
@@ -61,7 +61,7 @@ at::Tensor bev_max_pool_backward(
   int n = _geom_coords.size(0);
   int c = _out_grad.size(4);
   int n_intervals = _interval_lengths.size(0);
-  const at::cuda::OptionalCUDAGuard device_guard(device_of(_out_grad));
+  const at::musa::OptionalMUSAGuard device_guard(device_of(_out_grad));
   const float* out_grad = _out_grad.data_ptr<float>();
   const int* geom_coords = _geom_coords.data_ptr<int>();
   const int* interval_lengths = _interval_lengths.data_ptr<int>();

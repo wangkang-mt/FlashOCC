@@ -90,6 +90,11 @@ class Metric_mIoU():
         Returns:
             tuple:(hist, correctly number_predicted_labels, num_labelled_sample)
         """
+        if torch.is_tensor(pred):
+            pred = pred.cpu().numpy()
+        if torch.is_tensor(gt):
+            gt = gt.cpu().numpy()
+
         assert pred.shape == gt.shape
         k = (gt >= 0) & (gt < n_cl)  # exclude 255
         labeled = np.sum(k)     # N_total

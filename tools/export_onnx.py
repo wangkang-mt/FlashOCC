@@ -5,7 +5,7 @@ sys.path.insert(0, os.getcwd())
 
 import torch.onnx
 from mmcv import Config
-from mmdeploy.backend.tensorrt.utils import save, search_cuda_version
+from mmdeploy.backend.tensorrt.utils import save, search_musa_version
 
 try:
     # If mmdet version > 2.23.0, compat_cfg would be imported and
@@ -21,7 +21,7 @@ import h5py
 import mmcv
 import numpy as np
 import onnx
-import pycuda.driver as cuda
+import pymusa.driver as musa
 import tensorrt as trt
 import torch
 import tqdm
@@ -70,10 +70,10 @@ class HDF5CalibratorBEVDet(HDF5Calibrator):
                 slice_list = tuple(slice(0, end) for end in opt_shape)
                 data_np = data_np[slice_list]
 
-                data_np_cuda_ptr = cuda.mem_alloc(data_np.nbytes)
-                cuda.memcpy_htod(data_np_cuda_ptr,
+                data_np_musa_ptr = musa.mem_alloc(data_np.nbytes)
+                musa.memcpy_htod(data_np_musa_ptr,
                                  np.ascontiguousarray(data_np))
-                self.buffers[name] = data_np_cuda_ptr
+                self.buffers[name] = data_np_musa_ptr
 
                 ret.append(self.buffers[name])
             self.count += 1
@@ -217,13 +217,13 @@ def from_onnx(onnx_model: Union[str, onnx.ModelProto],
     """
 
     import os
-    old_cuda_device = os.environ.get('CUDA_DEVICE', None)
-    os.environ['CUDA_DEVICE'] = str(device_id)
-    import pycuda.autoinit  # noqa:F401
-    if old_cuda_device is not None:
-        os.environ['CUDA_DEVICE'] = old_cuda_device
+    old_musa_device = os.environ.get('MUSA_DEVICE', None)
+    os.environ['MUSA_DEVICE'] = str(device_id)
+    import pymusa.autoinit  # noqa:F401
+    if old_musa_device is not None:
+        os.environ['MUSA_DEVICE'] = old_musa_device
     else:
-        os.environ.pop('CUDA_DEVICE')
+        os.environ.pop('MUSA_DEVICE')
 
     load_tensorrt_plugin()
     # create builder and network
@@ -252,9 +252,9 @@ def from_onnx(onnx_model: Union[str, onnx.ModelProto],
     config = builder.create_builder_config()
     config.max_workspace_size = max_workspace_size
 
-    cuda_version = search_cuda_version()
-    if cuda_version is not None:
-        version_major = int(cuda_version.split('.')[0])
+    musa_version = search_musa_version()
+    if musa_version is not None:
+        version_major = int(musa_version.split('.')[0])
         if version_major < 11:
             # cu11 support cublasLt, so cudnn heuristic tactic should disable CUBLAS_LT # noqa E501
             tactic_source = config.get_tactic_sources() - (
@@ -387,11 +387,11 @@ def main():
     if args.fuse_conv_bn:
         model_prefix = model_prefix + '_fuse'
         model = fuse_module(model)
-    model.cuda()
+    model.musa()
     model.eval()
 
     for i, data in enumerate(data_loader):
-        inputs = [t.cuda() for t in data['img_inputs'][0]]
+        inputs = [t.musa() for t in data['img_inputs'][0]]
         img = inputs[0].squeeze(0)
         if img.shape[0] > 6:
             img = img[:6]

@@ -2,7 +2,7 @@
 #define _BEV_SUM_POOL_H
 
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 
 at::Tensor bev_sum_pool_forward(
   const at::Tensor _geom_feats,

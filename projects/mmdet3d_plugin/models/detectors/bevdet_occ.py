@@ -11,7 +11,7 @@ from mmdet3d.core import bbox3d2result
 import numpy as np
 from multiprocessing.dummy import Pool as ThreadPool
 from ...ops import nearest_assign
-# pool = ThreadPool(processes=4)  # 创建线程池
+# pool = ThreadPool(processes=4)  # 麓麓陆篓脧脽鲁脤鲁脴
 
 # for pano
 grid_config_occ = {
@@ -59,7 +59,7 @@ occind2detind = {
     8:8,
     1:9,
 }
-occind2detind_cuda = [-1, -1, 5, 3, 0, 4, 6, 7, -1, 2, 1]
+occind2detind_musa = [-1, -1, 5, 3, 0, 4, 6, 7, -1, 2, 1]
 
 inst_occ = np.ones([200, 200, 16])*0
 
@@ -535,15 +535,15 @@ class BEVDepthPano(BEVDepthOCC):
                     for tind in torch.range(0,len(tind_list)-1)[tind_list]:
                         l2s[cls_sort[1+int(tind.item())].item()] = int(tind.item()) + 1
 
-                is_cuda = True
-                # is_cuda = False
-                if is_cuda == True:
+                is_musa = True
+                # is_musa = False
+                if is_musa == True:
                     inst_id_list = indices + inst_num
                     l2s_key = indices.new_tensor([detind2occind[k] for k in l2s.keys()]).to(torch.int)
                     inst_occ = nearest_assign(
                         occ_pred.to(torch.int), 
                         l2s_key.to(torch.int),
-                        indices.new_tensor(occind2detind_cuda).to(torch.int),
+                        indices.new_tensor(occind2detind_musa).to(torch.int),
                         inst_cls.to(torch.int),
                         inst_xyz.to(torch.int),
                         inst_id_list.to(torch.int)
@@ -858,15 +858,15 @@ class BEVDepth4DPano(BEVDepth4DOCC):
                     for tind in torch.range(0,len(tind_list)-1)[tind_list]:
                         l2s[cls_sort[1+int(tind.item())].item()] = int(tind.item()) + 1
 
-                is_cuda = True
-                # is_cuda = False
-                if is_cuda == True:
+                is_musa = True
+                # is_musa = False
+                if is_musa == True:
                     inst_id_list = indices + inst_num
                     l2s_key = indices.new_tensor([detind2occind[k] for k in l2s.keys()]).to(torch.int)
                     inst_occ = nearest_assign(
                         occ_pred.to(torch.int), 
                         l2s_key.to(torch.int),
-                        indices.new_tensor(occind2detind_cuda).to(torch.int),
+                        indices.new_tensor(occind2detind_musa).to(torch.int),
                         inst_cls.to(torch.int),
                         inst_xyz.to(torch.int),
                         inst_id_list.to(torch.int)
@@ -1387,7 +1387,7 @@ class BEVDepthPanoTRT(BEVDepthPano):
         
         # outs_inst_center = self.aux_centerness_head([occ_bev_feature])
         x = self.aux_centerness_head.shared_conv(occ_bev_feature)     # (B, C'=share_conv_channel, H, W)
-        # 运行不同task_head,
+        # 脭脣脨脨虏禄脥卢task_head,
         outs_inst_center_reg = self.aux_centerness_head.task_heads[0].reg(x)
         outs.append(outs_inst_center_reg)
         outs_inst_center_height = self.aux_centerness_head.task_heads[0].height(x)
@@ -1440,7 +1440,7 @@ class BEVDepthPanoTRT(BEVDepthPano):
 
         # outs_inst_center = self.aux_centerness_head([occ_bev_feature])
         x = self.aux_centerness_head.shared_conv(occ_bev_feature)     # (B, C'=share_conv_channel, H, W)
-        # 运行不同task_head,
+        # 脭脣脨脨虏禄脥卢task_head,
         outs_inst_center_reg = self.aux_centerness_head.task_heads[0].reg(x)
         outs.append(outs_inst_center_reg)
         outs_inst_center_height = self.aux_centerness_head.task_heads[0].height(x)

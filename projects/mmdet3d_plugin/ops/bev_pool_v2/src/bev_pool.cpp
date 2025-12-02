@@ -1,9 +1,9 @@
 // Copyright (c) Phigent Robotics. All rights reserved.
 // Reference https://arxiv.org/abs/2211.17111
 #include <torch/torch.h>
-#include <c10/cuda/CUDAGuard.h>
+#include <c10/musa/MUSAGuard.h>
 
-// CUDA function declarations
+// MUSA function declarations
 void bev_pool_v2(int c, int n_intervals, const float* depth, const float* feat,
     const int* ranks_depth, const int* ranks_feat, const int* ranks_bev,
     const int* interval_starts, const int* interval_lengths, float* out);
@@ -15,7 +15,7 @@ void bev_pool_v2_grad(int c, int n_intervals, const float* out_grad,
 
 
 /*
-  Function: pillar pooling (forward, cuda)
+  Function: pillar pooling (forward, musa)
   Args:
     depth            : input depth, FloatTensor[n, d, h, w]
     feat             : input features, FloatTensor[n, h, w, c]
@@ -39,7 +39,7 @@ void bev_pool_v2_forward(
 ) {
   int c = _feat.size(4);
   int n_intervals = _interval_lengths.size(0);
-  const at::cuda::OptionalCUDAGuard device_guard(device_of(_depth));
+  const at::musa::OptionalMUSAGuard device_guard(device_of(_depth));
   const float* depth = _depth.data_ptr<float>();
   const float* feat = _feat.data_ptr<float>();
   const int* ranks_depth = _ranks_depth.data_ptr<int>();
@@ -58,7 +58,7 @@ void bev_pool_v2_forward(
 
 
 /*
-  Function: pillar pooling (backward, cuda)
+  Function: pillar pooling (backward, musa)
   Args:
     out_grad         : grad of output bev feature, FloatTensor[b, c, h_out, w_out]
     depth_grad       : grad of input depth, FloatTensor[n, d, h, w]
@@ -85,7 +85,7 @@ void bev_pool_v2_backward(
 ) {
   int c = _out_grad.size(4);
   int n_intervals = _interval_lengths.size(0);
-  const at::cuda::OptionalCUDAGuard device_guard(device_of(_out_grad));
+  const at::musa::OptionalMUSAGuard device_guard(device_of(_out_grad));
   const float* out_grad = _out_grad.data_ptr<float>();
   float* depth_grad = _depth_grad.data_ptr<float>();
   float* feat_grad = _feat_grad.data_ptr<float>();

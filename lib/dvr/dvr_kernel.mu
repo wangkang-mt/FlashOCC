@@ -3,8 +3,8 @@
 
 #include <torch/extension.h>
 #include <stdio.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include <musa.h>
+#include <musa_runtime.h>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -16,7 +16,7 @@ enum LossType {L1, L2, ABSREL};
 enum PhaseName {TEST, TRAIN};
 
 template <typename scalar_t>
-__global__ void init_cuda_kernel(
+__global__ void init_musa_kernel(
     const torch::PackedTensorAccessor32<scalar_t,3,torch::RestrictPtrTraits> points,
     const torch::PackedTensorAccessor32<scalar_t,2,torch::RestrictPtrTraits> tindex,
     torch::PackedTensorAccessor32<scalar_t,5,torch::RestrictPtrTraits> occupancy) {
@@ -67,7 +67,7 @@ __global__ void init_cuda_kernel(
 }
 
 template <typename scalar_t>
-__global__ void render_forward_cuda_kernel(
+__global__ void render_forward_musa_kernel(
     const torch::PackedTensorAccessor32<scalar_t,5,torch::RestrictPtrTraits> sigma,
     const torch::PackedTensorAccessor32<scalar_t,3,torch::RestrictPtrTraits> origin,
     const torch::PackedTensorAccessor32<scalar_t,3,torch::RestrictPtrTraits> points,
@@ -326,7 +326,7 @@ __global__ void render_forward_cuda_kernel(
  * output shape
  *   dist     : N x M
  */
-std::vector<torch::Tensor> render_forward_cuda(
+std::vector<torch::Tensor> render_forward_musa(
     torch::Tensor sigma,
     torch::Tensor origin,
     torch::Tensor points,
@@ -368,8 +368,8 @@ std::vector<torch::Tensor> render_forward_cuda(
         exit(1);
     }
 
-    AT_DISPATCH_FLOATING_TYPES(sigma.type(), "render_forward_cuda", ([&] {
-                render_forward_cuda_kernel<scalar_t><<<blocks, threads>>>(
+    AT_DISPATCH_FLOATING_TYPES(sigma.type(), "render_forward_musa", ([&] {
+                render_forward_musa_kernel<scalar_t><<<blocks, threads>>>(
                     sigma.packed_accessor32<scalar_t,5,torch::RestrictPtrTraits>(),
                     origin.packed_accessor32<scalar_t,3,torch::RestrictPtrTraits>(),
                     points.packed_accessor32<scalar_t,3,torch::RestrictPtrTraits>(),
@@ -381,14 +381,14 @@ std::vector<torch::Tensor> render_forward_cuda(
                     train_phase);
             }));
 
-    cudaDeviceSynchronize();
+    musaDeviceSynchronize();
 
     // return {pog, pred_dist, gt_dist};
     return {pred_dist, gt_dist, coord_index};
 }
 
 template <typename scalar_t>
-__global__ void render_cuda_kernel(
+__global__ void render_musa_kernel(
     const torch::PackedTensorAccessor32<scalar_t,5,torch::RestrictPtrTraits> sigma,
     const torch::PackedTensorAccessor32<scalar_t,3,torch::RestrictPtrTraits> origin,
     const torch::PackedTensorAccessor32<scalar_t,3,torch::RestrictPtrTraits> points,
@@ -645,7 +645,7 @@ __global__ void render_cuda_kernel(
  *   loss     : N x M
  *   grad_sigma : N x T x H x L x W
  */
-std::vector<torch::Tensor> render_cuda(
+std::vector<torch::Tensor> render_musa(
     torch::Tensor sigma,
     torch::Tensor origin,
     torch::Tensor points,
@@ -680,8 +680,8 @@ std::vector<torch::Tensor> render_cuda(
         exit(1);
     }
 
-    AT_DISPATCH_FLOATING_TYPES(sigma.type(), "render_cuda", ([&] {
-                render_cuda_kernel<scalar_t><<<blocks, threads>>>(
+    AT_DISPATCH_FLOATING_TYPES(sigma.type(), "render_musa", ([&] {
+                render_musa_kernel<scalar_t><<<blocks, threads>>>(
                     sigma.packed_accessor32<scalar_t,5,torch::RestrictPtrTraits>(),
                     origin.packed_accessor32<scalar_t,3,torch::RestrictPtrTraits>(),
                     points.packed_accessor32<scalar_t,3,torch::RestrictPtrTraits>(),
@@ -694,7 +694,7 @@ std::vector<torch::Tensor> render_cuda(
                     loss_type);
             }));
 
-    cudaDeviceSynchronize();
+    musaDeviceSynchronize();
 
     // grad_sigma_count += (grad_sigma_count == 0);
     // grad_sigma /= grad_sigma_count;
@@ -711,7 +711,7 @@ std::vector<torch::Tensor> render_cuda(
  * output shape
  *   occupancy: N x T x H x L x W
  */
-torch::Tensor init_cuda(
+torch::Tensor init_musa(
     torch::Tensor points,
     torch::Tensor tindex,
     const std::vector<int> grid) {
@@ -733,15 +733,15 @@ torch::Tensor init_cuda(
     const dim3 blocks((M + threads - 1) / threads, N);
 
     // initialize occupancy such that every voxel with one or more points is occupied
-    AT_DISPATCH_FLOATING_TYPES(points.type(), "init_cuda", ([&] {
-                init_cuda_kernel<scalar_t><<<blocks, threads>>>(
+    AT_DISPATCH_FLOATING_TYPES(points.type(), "init_musa", ([&] {
+                init_musa_kernel<scalar_t><<<blocks, threads>>>(
                     points.packed_accessor32<scalar_t,3,torch::RestrictPtrTraits>(),
                     tindex.packed_accessor32<scalar_t,2,torch::RestrictPtrTraits>(),
                     occupancy.packed_accessor32<scalar_t,5,torch::RestrictPtrTraits>());
             }));
 
     // synchronize
-    cudaDeviceSynchronize();
+    musaDeviceSynchronize();
 
     return occupancy;
 }

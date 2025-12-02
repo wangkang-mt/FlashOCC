@@ -113,7 +113,7 @@ def main():
     #     data = copy.deepcopy(data_ori)
     for i, data in enumerate(data_loader):
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         start_time = time.perf_counter()
 
         with torch.no_grad():
@@ -122,7 +122,7 @@ def main():
                   w_panoproc=args.w_panoproc,
                   **data)
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         elapsed = time.perf_counter() - start_time
 
         if i >= num_warmup:

@@ -107,13 +107,13 @@ def main():
 
     # benchmark with several samples and take the average
     for i, data in enumerate(data_loader):
-        inputs = [d.cuda() for d in data['img_inputs'][0]]
+        inputs = [d.musa() for d in data['img_inputs'][0]]
         with torch.no_grad():
             feat_prev, inputs = model.module.extract_img_feat(
                 inputs, pred_prev=True, img_metas=None)
         data['img_inputs'][0] = inputs
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         start_time = time.perf_counter()
 
         with torch.no_grad():
@@ -126,7 +126,7 @@ def main():
                 w_panoproc=args.w_panoproc,
                 **data)
 
-        torch.cuda.synchronize()
+        torch.musa.synchronize()
         elapsed = time.perf_counter() - start_time
 
         if i >= num_warmup:

@@ -17,7 +17,7 @@ try:
     from itertools import  ifilterfalse
 except ImportError: # py3k
     from itertools import  filterfalse as ifilterfalse
-from torch.cuda.amp import autocast
+from torch_musa.core.amp import autocast
 
 def lovasz_grad(gt_sorted):
     """

@@ -6,7 +6,7 @@ from mmcv.ops import nms, nms_rotated
 
 
 # This function duplicates functionality of mmcv.ops.iou_3d.nms_bev
-# from mmcv<=1.5, but using cuda ops from mmcv.ops.nms.nms_rotated.
+# from mmcv<=1.5, but using musa ops from mmcv.ops.nms.nms_rotated.
 # Nms api will be unified in mmdetection3d one day.
 def nms_bev(boxes, scores, thresh, pre_max_size=None, post_max_size=None,
             xyxyr2xywhr=True):
@@ -51,7 +51,7 @@ def nms_bev(boxes, scores, thresh, pre_max_size=None, post_max_size=None,
 
 
 # This function duplicates functionality of mmcv.ops.iou_3d.nms_normal_bev
-# from mmcv<=1.5, but using cuda ops from mmcv.ops.nms.nms.
+# from mmcv<=1.5, but using musa ops from mmcv.ops.nms.nms.
 # Nms api will be unified in mmdetection3d one day.
 def nms_normal_bev(boxes, scores, thresh):
     """Normal NMS function GPU implementation (for BEV boxes). The overlap of

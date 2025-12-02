@@ -44,14 +44,14 @@ def parse_args():
 
 
 def construct_input(input_shape):
-    rot = torch.eye(4).float().cuda().view(1, 1, 4, 4).expand(1,6,4,4)
+    rot = torch.eye(4).float().musa().view(1, 1, 4, 4).expand(1,6,4,4)
 
-    intrins = torch.eye(3).float().cuda().view(1,1, 3, 3).expand(1,6,3,3)
+    intrins = torch.eye(3).float().musa().view(1,1, 3, 3).expand(1,6,3,3)
     input = dict(img_inputs=[
-        torch.ones(()).new_empty((1, 6, *input_shape)).cuda(), rot,
+        torch.ones(()).new_empty((1, 6, *input_shape)).musa(), rot,
         rot, intrins, intrins,
-        torch.ones((1, 6, 3)).cuda(),
-        torch.eye(3).float().cuda().view(1, 3, 3)
+        torch.ones((1, 6, 3)).musa(),
+        torch.eye(3).float().musa().view(1, 3, 3)
     ])
     return input
 
@@ -108,8 +108,8 @@ def main():
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
-    if torch.cuda.is_available():
-        model.cuda()
+    if torch.musa.is_available():
+        model.musa()
     model.eval()
 
     if hasattr(model, 'forward_dummy'):

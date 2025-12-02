@@ -245,7 +245,7 @@ class BEVDet4D(BEVDet):
         global2keyego = torch.inverse(keyego2global.double())
         # sensor --> ego --> global --> key_ego
         sensor2keyegos = \
-            global2keyego @ ego2globals.double() @ sensor2egos.double()     # (B, N_frames, N_views, 4, 4)
+            global2keyego.float() @ ego2globals.float() @ sensor2egos.float()     # (B, N_frames, N_views, 4, 4)
         sensor2keyegos = sensor2keyegos.float()
 
         # --------------------  for stereo --------------------------
@@ -264,8 +264,8 @@ class BEVDet4D(BEVDet):
 
             # curr_sensor --> curr_ego --> global --> prev_ego --> prev_sensor
             curr2adjsensor = \
-                torch.inverse(ego2globals_adj @ sensor2egos_adj) \
-                @ ego2globals_curr @ sensor2egos_curr       # (B, N_temporal=2, N_views, 4, 4)
+                torch.inverse(ego2globals_adj.float() @ sensor2egos_adj.float()) \
+                @ ego2globals_curr.float() @ sensor2egos_curr.float()       # (B, N_temporal=2, N_views, 4, 4)
             curr2adjsensor = curr2adjsensor.float()         # (B, N_temporal=2, N_views, 4, 4)
             curr2adjsensor = torch.split(curr2adjsensor, 1, 1)
             curr2adjsensor = [p.squeeze(1) for p in curr2adjsensor]
