@@ -107,7 +107,7 @@ model = dict(
         stride=[1, ],
         backbone_output_ids=[0, ]),
     occ_head=dict(
-        type='BEVOCCHead2D_V2',
+        type='BEVOCCHead2D',
         in_dim=256,
         out_dim=256,
         Dz=16,
@@ -238,7 +238,12 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[24, ])
 runner = dict(type='EpochBasedRunner', max_epochs=24)
-
+log_config = dict(
+    interval=1,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='TensorboardLoggerHook')
+    ])
 custom_hooks = [
     dict(
         type='MEGVIIEMAHook',
